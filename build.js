@@ -27,7 +27,15 @@ if (hasPackageJson && hasVercelJson) {
   // Otherwise use process.cwd() as fallback
 }
 
+// Create public directory - try multiple locations to ensure Vercel finds it
+// Vercel might be looking relative to where it runs from, so create in multiple places
 const publicDir = path.join(projectRoot, 'public');
+const publicDirFromCwd = path.join(process.cwd(), 'public'); // Relative to where script runs
+const publicDirRelative = 'public'; // Also try relative path
+const publicDirAbsolute = path.resolve(projectRoot, 'public');
+
+// Use the project root public directory as primary
+let finalPublicDir = publicDir;
 
 console.log('Project root:', projectRoot);
 console.log('Public directory will be:', publicDir);
@@ -52,36 +60,57 @@ if (!fs.existsSync(indexCheck)) {
 console.log('✓ web/index.html exists');
 
 // Create public directory if it doesn't exist
+// Create in multiple locations to ensure Vercel finds it
 try {
-  if (!fs.existsSync(publicDir)) {
-    fs.mkdirSync(publicDir, { recursive: true });
-    console.log('Created public directory');
-  } else {
-    // Clean existing public directory - use compatible method
-    console.log('Cleaning existing public directory...');
-    if (fs.existsSync(publicDir)) {
-      // Use recursive delete function that works on all Node versions
-      function deleteDir(dir) {
-        if (fs.existsSync(dir)) {
-          const files = fs.readdirSync(dir);
-          for (const file of files) {
-            const filePath = path.join(dir, file);
-            const stat = fs.statSync(filePath);
-            if (stat.isDirectory()) {
-              deleteDir(filePath);
-            } else {
-              fs.unlinkSync(filePath);
-            }
-          }
-          fs.rmdirSync(dir);
+  const dirsToCreate = [publicDir, publicDirAbsolute, publicDirRelative];
+  
+  console.log('Creating public directory in multiple locations:');
+  dirsToCreate.forEach(dir => console.log(`  - ${dir}`));
+  
+  // Clean and create public directory
+  function deleteDir(dir) {
+    if (fs.existsSync(dir)) {
+      const files = fs.readdirSync(dir);
+      for (const file of files) {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat.isDirectory()) {
+          deleteDir(filePath);
+        } else {
+          fs.unlinkSync(filePath);
         }
       }
-      deleteDir(publicDir);
-      fs.mkdirSync(publicDir, { recursive: true });
-      console.log('Cleaned and recreated public directory');
+      fs.rmdirSync(dir);
     }
   }
-  console.log(`Public directory: ${publicDir}`);
+  
+  // Clean existing
+  if (fs.existsSync(publicDir)) {
+    console.log('Cleaning existing public directory...');
+    deleteDir(publicDir);
+  }
+  
+  // Create in project root (primary location)
+  fs.mkdirSync(publicDir, { recursive: true });
+  console.log(`✓ Created public directory at: ${publicDir}`);
+  console.log(`✓ Absolute path: ${path.resolve(publicDir)}`);
+  
+  // Also create relative to current working directory (where Vercel might be looking)
+  const dirsToTry = [publicDirFromCwd, publicDirRelative];
+  dirsToTry.forEach(dir => {
+    try {
+      if (dir !== publicDir && !fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log(`✓ Also created: ${dir}`);
+      }
+    } catch (err) {
+      console.warn(`⚠ Could not create ${dir}: ${err.message}`);
+    }
+  });
+  
+  // Ensure we use the project root public directory for all operations
+  finalPublicDir = publicDir;
+  
 } catch (error) {
   console.error('Error creating public directory:', error);
   console.error('Error details:', error.message);
@@ -96,7 +125,7 @@ const filesToCopy = ['script.js', 'styles.css', 'vlsm-tree-complete.mmd', 'vlsm_
 let filesCopied = 0;
 filesToCopy.forEach(file => {
   const src = path.join(webDir, file);
-  const dest = path.join(publicDir, file);
+  const dest = path.join(finalPublicDir, file);
   try {
     if (fs.existsSync(src)) {
       fs.copyFileSync(src, dest);
@@ -115,7 +144,7 @@ console.log(`Copied ${filesCopied} out of ${filesToCopy.length} web files`);
 
 // Copy and update index.html paths - THIS IS CRITICAL
 const indexSrc = path.join(webDir, 'index.html');
-const indexDest = path.join(publicDir, 'index.html');
+const indexDest = path.join(finalPublicDir, 'index.html');
 let indexHtmlExists = false;
 try {
   if (fs.existsSync(indexSrc)) {
@@ -145,7 +174,7 @@ try {
 
 // Copy results directory
 const resultsSrc = path.join(projectRoot, 'results');
-const resultsDest = path.join(publicDir, 'results');
+const resultsDest = path.join(finalPublicDir, 'results');
 try {
   if (fs.existsSync(resultsSrc)) {
     copyDirSync(resultsSrc, resultsDest);
@@ -161,7 +190,7 @@ try {
 
 // Copy configured_topology_snapshots
 const snapshotsSrc = path.join(projectRoot, 'configured_topology_snapshots');
-const snapshotsDest = path.join(publicDir, 'configured_topology_snapshots');
+const snapshotsDest = path.join(finalPublicDir, 'configured_topology_snapshots');
 try {
   if (fs.existsSync(snapshotsSrc)) {
     copyDirSync(snapshotsSrc, snapshotsDest);
@@ -180,7 +209,7 @@ const rootImages = ['Project Topology.png', 'other_networks_topology_lables.png'
                    'VLSM-tree-1.png', 'VLSM-tree-2.png', 'VLSM-tree-other_networks.png'];
 rootImages.forEach(img => {
   const src = path.join(projectRoot, img);
-  const dest = path.join(publicDir, img);
+  const dest = path.join(finalPublicDir, img);
   try {
     if (fs.existsSync(src)) {
       fs.copyFileSync(src, dest);
@@ -196,18 +225,18 @@ rootImages.forEach(img => {
 
 // Verify public directory exists and has files
 try {
-  if (!fs.existsSync(publicDir)) {
+  if (!fs.existsSync(finalPublicDir)) {
     console.error('✗ ERROR: Public directory was not created!');
     console.error('Attempting to create it now...');
-    fs.mkdirSync(publicDir, { recursive: true });
-    if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(finalPublicDir, { recursive: true });
+    if (!fs.existsSync(finalPublicDir)) {
       console.error('✗ Failed to create public directory');
       process.exit(1);
     }
     console.log('✓ Public directory created');
   }
   
-  const publicFiles = fs.readdirSync(publicDir);
+  const publicFiles = fs.readdirSync(finalPublicDir);
   console.log(`\nPublic directory contains ${publicFiles.length} items`);
   
   if (publicFiles.length === 0) {
@@ -218,7 +247,7 @@ try {
   
   console.log(`\n✓ Build complete! Public directory contains ${publicFiles.length} items:`);
   publicFiles.forEach(file => {
-    const filePath = path.join(publicDir, file);
+    const filePath = path.join(finalPublicDir, file);
     try {
       const stats = fs.statSync(filePath);
       if (stats.isDirectory()) {
@@ -232,7 +261,7 @@ try {
   });
   
   // Verify index.html exists - CRITICAL
-  const indexPath = path.join(publicDir, 'index.html');
+  const indexPath = path.join(finalPublicDir, 'index.html');
   if (!fs.existsSync(indexPath)) {
     console.error('✗ CRITICAL ERROR: index.html not found in public directory!');
     console.error('Public directory files:', publicFiles);
@@ -241,20 +270,20 @@ try {
   console.log('✓ Verified index.html exists');
   
   // Create a marker file to verify build completed
-  const markerFile = path.join(publicDir, '.vercel-build-complete');
+  const markerFile = path.join(finalPublicDir, '.vercel-build-complete');
   fs.writeFileSync(markerFile, `Build completed at: ${new Date().toISOString()}\n`);
   console.log('✓ Created build marker file');
   
   console.log('\n✓ All files copied successfully. Ready for deployment!');
-  console.log(`✓ Public directory verified at: ${publicDir}`);
-  console.log(`✓ Public directory absolute path: ${path.resolve(publicDir)}`);
+  console.log(`✓ Public directory verified at: ${finalPublicDir}`);
+  console.log(`✓ Public directory absolute path: ${path.resolve(finalPublicDir)}`);
   
   // Final verification - list directory contents
-  const finalCheck = fs.readdirSync(publicDir);
+  const finalCheck = fs.readdirSync(finalPublicDir);
   console.log(`✓ Final verification: ${finalCheck.length} items in public directory`);
   
   // CRITICAL: Verify public directory exists with absolute path
-  const absolutePublicDir = path.resolve(publicDir);
+  const absolutePublicDir = path.resolve(finalPublicDir);
   if (!fs.existsSync(absolutePublicDir)) {
     console.error(`✗ CRITICAL: Public directory does not exist at absolute path: ${absolutePublicDir}`);
     process.exit(1);
