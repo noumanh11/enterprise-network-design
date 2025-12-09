@@ -1,8 +1,7 @@
 {
   "version": 2,
-  "rootDirectory": ".",
   "installCommand": "echo 'No dependencies to install'",
-  "buildCommand": "node build.js",
+  "buildCommand": "node web/build.js || node build.js || node build-wrapper.js",
   "outputDirectory": "public"
 }
 
