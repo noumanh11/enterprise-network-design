@@ -10,26 +10,6 @@
       "source": "/index.html",
       "destination": "/web/index.html"
     }
-  ],
-  "headers": [
-    {
-      "source": "**/*.{png,jpg,jpeg,gif,svg,pdf}",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "**/*.{js,css}",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600"
-        }
-      ]
-    }
   ]
 }
 
