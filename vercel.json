@@ -13,7 +13,7 @@
   ],
   "headers": [
     {
-      "source": "/(.*\\.(png|jpg|jpeg|gif|svg|pdf))",
+      "source": "**/*.{png,jpg,jpeg,gif,svg,pdf}",
       "headers": [
         {
           "key": "Cache-Control",
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(js|css))",
+      "source": "**/*.{js,css}",
       "headers": [
         {
           "key": "Cache-Control",
