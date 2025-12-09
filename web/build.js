@@ -22,5 +22,15 @@ if (!fs.existsSync(mainBuildScript)) {
 
 console.log('✓ Found main build.js, changing to project root and running...\n');
 process.chdir(projectRoot);
-require(mainBuildScript);
+console.log('Current directory after chdir:', process.cwd());
+console.log('Verifying public directory will be created at:', path.join(projectRoot, 'public'));
+
+try {
+  require(mainBuildScript);
+  console.log('\n✓ Build script completed successfully');
+} catch (error) {
+  console.error('✗ ERROR: Build script failed:', error.message);
+  console.error('Error stack:', error.stack);
+  process.exit(1);
+}
 

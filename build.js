@@ -247,10 +247,34 @@ try {
   
   console.log('\n✓ All files copied successfully. Ready for deployment!');
   console.log(`✓ Public directory verified at: ${publicDir}`);
+  console.log(`✓ Public directory absolute path: ${path.resolve(publicDir)}`);
   
   // Final verification - list directory contents
   const finalCheck = fs.readdirSync(publicDir);
   console.log(`✓ Final verification: ${finalCheck.length} items in public directory`);
+  
+  // CRITICAL: Verify public directory exists with absolute path
+  const absolutePublicDir = path.resolve(publicDir);
+  if (!fs.existsSync(absolutePublicDir)) {
+    console.error(`✗ CRITICAL: Public directory does not exist at absolute path: ${absolutePublicDir}`);
+    process.exit(1);
+  }
+  
+  // List files in public directory to help debug
+  console.log('\n=== Public Directory Contents (for debugging) ===');
+  try {
+    const files = fs.readdirSync(absolutePublicDir);
+    files.forEach(file => {
+      const filePath = path.join(absolutePublicDir, file);
+      const stats = fs.statSync(filePath);
+      console.log(`  ${stats.isDirectory() ? '📁' : '📄'} ${file}`);
+    });
+  } catch (err) {
+    console.error('Error listing public directory:', err.message);
+  }
+  
+  console.log(`\n✓ Build completed successfully!`);
+  console.log(`✓ Public directory ready at: ${absolutePublicDir}`);
   
   process.exit(0);
 } catch (error) {
