@@ -11,6 +11,23 @@ console.log('Script directory:', __dirname);
 const originalCwd = process.cwd();
 console.log('Original working directory (Vercel root):', originalCwd);
 
+// Determine where to create public directory
+// If originalCwd is web/, go up one level to project root
+// Otherwise, use project root directly
+let publicInOriginalCwd;
+if (path.basename(originalCwd) === 'web' || originalCwd.endsWith('web')) {
+  // Running from web/, create public in parent (project root)
+  publicInOriginalCwd = path.join(originalCwd, '..', 'public');
+} else {
+  // Running from project root, create public there
+  publicInOriginalCwd = path.join(originalCwd, 'public');
+}
+console.log('Will create public directory at:', publicInOriginalCwd);
+
+// Also try creating it relative to current directory (for Vercel compatibility)
+const publicRelative = path.join(originalCwd, 'public');
+console.log('Also trying relative path:', publicRelative);
+
 // We're in web/, so go up one level to find project root
 const projectRoot = path.join(__dirname, '..');
 const mainBuildScript = path.join(projectRoot, 'build.js');
@@ -42,6 +59,23 @@ console.log('Changing to project root and running build...\n');
 // Change to project root to run build
 process.chdir(projectRoot);
 console.log('Current directory after chdir:', process.cwd());
+
+// Create public directory in expected location BEFORE running build
+try {
+  // Ensure parent directory exists
+  const publicParent = path.dirname(publicInOriginalCwd);
+  if (!fs.existsSync(publicParent)) {
+    fs.mkdirSync(publicParent, { recursive: true });
+  }
+  
+  // Create public directory
+  if (!fs.existsSync(publicInOriginalCwd)) {
+    fs.mkdirSync(publicInOriginalCwd, { recursive: true });
+    console.log(`✓ Pre-created public directory at: ${publicInOriginalCwd}`);
+  }
+} catch (preError) {
+  console.warn(`⚠ Could not pre-create public directory: ${preError.message}`);
+}
 
 try {
   require(mainBuildScript);
