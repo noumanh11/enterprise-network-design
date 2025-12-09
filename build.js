@@ -6,9 +6,27 @@ console.log('=== Vercel Build Script ===');
 console.log('Current working directory:', process.cwd());
 console.log('Script directory (__dirname):', __dirname);
 
-// Use process.cwd() to ensure we're in the project root
-// Vercel runs builds from the project root
-const projectRoot = process.cwd();
+// Determine project root - try multiple methods for compatibility
+// First, try to find the project root by looking for package.json or vercel.json
+let projectRoot = process.cwd();
+const scriptDir = __dirname;
+
+// Check if we're in the right directory (has package.json and build.js)
+const hasPackageJson = fs.existsSync(path.join(scriptDir, 'package.json'));
+const hasVercelJson = fs.existsSync(path.join(scriptDir, 'vercel.json'));
+
+if (hasPackageJson && hasVercelJson) {
+  // We're in the project root
+  projectRoot = scriptDir;
+} else {
+  // Try going up one level (in case we're in a subdirectory)
+  const parentDir = path.dirname(scriptDir);
+  if (fs.existsSync(path.join(parentDir, 'package.json')) && fs.existsSync(path.join(parentDir, 'vercel.json'))) {
+    projectRoot = parentDir;
+  }
+  // Otherwise use process.cwd() as fallback
+}
+
 const publicDir = path.join(projectRoot, 'public');
 
 console.log('Project root:', projectRoot);
