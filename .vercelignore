@@ -1,0 +1,12 @@
+node_modules
+.git
+*.pkt
+*.tex
+*.pdf
+Project_Report.tex
+Project_Rubric.pdf
+Project Description.pdf
+VLSM_Subnetting_Configuration.pdf
+documentation/
+.gitignore
+
