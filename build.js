@@ -15,6 +15,24 @@ console.log('Project root:', projectRoot);
 console.log('Public directory will be:', publicDir);
 console.log('');
 
+// Verify web directory exists
+const webDir = path.join(projectRoot, 'web');
+if (!fs.existsSync(webDir)) {
+  console.error('✗ CRITICAL ERROR: web/ directory not found!');
+  console.error('Current directory contents:', fs.readdirSync(projectRoot));
+  process.exit(1);
+}
+console.log('✓ Web directory exists:', webDir);
+
+// Verify index.html exists in web directory
+const indexCheck = path.join(webDir, 'index.html');
+if (!fs.existsSync(indexCheck)) {
+  console.error('✗ CRITICAL ERROR: web/index.html not found!');
+  console.error('Web directory contents:', fs.readdirSync(webDir));
+  process.exit(1);
+}
+console.log('✓ web/index.html exists');
+
 // Create public directory if it doesn't exist
 try {
   if (!fs.existsSync(publicDir)) {
@@ -35,10 +53,10 @@ try {
 }
 
 // Copy web files to public
-const webDir = path.join(projectRoot, 'web');
-console.log('Web directory:', webDir);
+// (webDir already defined above)
 const filesToCopy = ['script.js', 'styles.css', 'vlsm-tree-complete.mmd', 'vlsm_data.txt'];
 
+let filesCopied = 0;
 filesToCopy.forEach(file => {
   const src = path.join(webDir, file);
   const dest = path.join(publicDir, file);
@@ -46,18 +64,22 @@ filesToCopy.forEach(file => {
     if (fs.existsSync(src)) {
       fs.copyFileSync(src, dest);
       console.log(`✓ Copied ${file}`);
+      filesCopied++;
     } else {
-      console.warn(`⚠ File not found: ${src}`);
+      console.warn(`⚠ File not found: ${src} (skipping)`);
     }
   } catch (error) {
     console.error(`✗ Error copying ${file}:`, error.message);
-    process.exit(1);
+    // Don't exit on individual file errors, just warn
+    console.warn(`⚠ Continuing despite error with ${file}`);
   }
 });
+console.log(`Copied ${filesCopied} out of ${filesToCopy.length} web files`);
 
-// Copy and update index.html paths
+// Copy and update index.html paths - THIS IS CRITICAL
 const indexSrc = path.join(webDir, 'index.html');
 const indexDest = path.join(publicDir, 'index.html');
+let indexHtmlExists = false;
 try {
   if (fs.existsSync(indexSrc)) {
     let htmlContent = fs.readFileSync(indexSrc, 'utf8');
@@ -69,12 +91,16 @@ try {
     htmlContent = htmlContent.replace(/src=["']\.\.\/([^"']+\.(png|jpg|jpeg|gif|svg|pdf))["']/g, 'src="$1"');
     fs.writeFileSync(indexDest, htmlContent);
     console.log('✓ Copied and updated index.html');
+    indexHtmlExists = true;
   } else {
-    console.error(`✗ index.html not found at: ${indexSrc}`);
+    console.error(`✗ CRITICAL: index.html not found at: ${indexSrc}`);
+    console.error(`✗ Web directory contents:`, fs.existsSync(webDir) ? fs.readdirSync(webDir) : 'Web directory does not exist');
+    // This is critical - exit if index.html is missing
     process.exit(1);
   }
 } catch (error) {
-  console.error('✗ Error processing index.html:', error.message);
+  console.error('✗ CRITICAL: Error processing index.html:', error.message);
+  console.error('Error stack:', error.stack);
   process.exit(1);
 }
 
@@ -86,11 +112,12 @@ try {
     copyDirSync(resultsSrc, resultsDest);
     console.log('✓ Copied results directory');
   } else {
-    console.warn('⚠ Results directory not found');
+    console.warn('⚠ Results directory not found (this is OK if you don\'t have results yet)');
   }
 } catch (error) {
   console.error('✗ Error copying results directory:', error.message);
-  process.exit(1);
+  console.warn('⚠ Continuing despite error (results directory is optional)');
+  // Don't exit - results directory is optional
 }
 
 // Copy configured_topology_snapshots
@@ -101,11 +128,12 @@ try {
     copyDirSync(snapshotsSrc, snapshotsDest);
     console.log('✓ Copied configured_topology_snapshots directory');
   } else {
-    console.warn('⚠ configured_topology_snapshots directory not found');
+    console.warn('⚠ configured_topology_snapshots directory not found (this is OK if you don\'t have snapshots yet)');
   }
 } catch (error) {
   console.error('✗ Error copying configured_topology_snapshots:', error.message);
-  process.exit(1);
+  console.warn('⚠ Continuing despite error (snapshots directory is optional)');
+  // Don't exit - snapshots directory is optional
 }
 
 // Copy root images
@@ -131,32 +159,47 @@ rootImages.forEach(img => {
 try {
   if (!fs.existsSync(publicDir)) {
     console.error('✗ ERROR: Public directory was not created!');
-    process.exit(1);
+    console.error('Attempting to create it now...');
+    fs.mkdirSync(publicDir, { recursive: true });
+    if (!fs.existsSync(publicDir)) {
+      console.error('✗ Failed to create public directory');
+      process.exit(1);
+    }
+    console.log('✓ Public directory created');
   }
   
   const publicFiles = fs.readdirSync(publicDir);
+  console.log(`\nPublic directory contains ${publicFiles.length} items`);
+  
   if (publicFiles.length === 0) {
-    console.error('✗ ERROR: Public directory is empty!');
+    console.error('✗ ERROR: Public directory is empty after build!');
+    console.error('This should not happen. Check build logs above for errors.');
     process.exit(1);
   }
   
   console.log(`\n✓ Build complete! Public directory contains ${publicFiles.length} items:`);
   publicFiles.forEach(file => {
     const filePath = path.join(publicDir, file);
-    const stats = fs.statSync(filePath);
-    if (stats.isDirectory()) {
-      console.log(`  📁 ${file}/`);
-    } else {
-      console.log(`  📄 ${file}`);
+    try {
+      const stats = fs.statSync(filePath);
+      if (stats.isDirectory()) {
+        console.log(`  📁 ${file}/`);
+      } else {
+        console.log(`  📄 ${file}`);
+      }
+    } catch (err) {
+      console.log(`  ⚠ ${file} (error reading stats)`);
     }
   });
   
-  // Verify index.html exists
+  // Verify index.html exists - CRITICAL
   const indexPath = path.join(publicDir, 'index.html');
   if (!fs.existsSync(indexPath)) {
-    console.error('✗ ERROR: index.html not found in public directory!');
+    console.error('✗ CRITICAL ERROR: index.html not found in public directory!');
+    console.error('Public directory files:', publicFiles);
     process.exit(1);
   }
+  console.log('✓ Verified index.html exists');
   
   // Create a marker file to verify build completed
   const markerFile = path.join(publicDir, '.vercel-build-complete');
