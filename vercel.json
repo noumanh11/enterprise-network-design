@@ -1,7 +1,7 @@
 {
   "version": 2,
   "installCommand": "echo 'No dependencies to install'",
-  "buildCommand": "npm run build",
+  "buildCommand": "node build-wrapper.js",
   "outputDirectory": "public"
 }
 
