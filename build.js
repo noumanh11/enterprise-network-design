@@ -39,16 +39,35 @@ try {
     fs.mkdirSync(publicDir, { recursive: true });
     console.log('Created public directory');
   } else {
-    // Clean existing public directory
+    // Clean existing public directory - use compatible method
     console.log('Cleaning existing public directory...');
     if (fs.existsSync(publicDir)) {
-      fs.rmSync(publicDir, { recursive: true, force: true });
+      // Use recursive delete function that works on all Node versions
+      function deleteDir(dir) {
+        if (fs.existsSync(dir)) {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const filePath = path.join(dir, file);
+            const stat = fs.statSync(filePath);
+            if (stat.isDirectory()) {
+              deleteDir(filePath);
+            } else {
+              fs.unlinkSync(filePath);
+            }
+          }
+          fs.rmdirSync(dir);
+        }
+      }
+      deleteDir(publicDir);
       fs.mkdirSync(publicDir, { recursive: true });
+      console.log('Cleaned and recreated public directory');
     }
   }
   console.log(`Public directory: ${publicDir}`);
 } catch (error) {
   console.error('Error creating public directory:', error);
+  console.error('Error details:', error.message);
+  console.error('Stack:', error.stack);
   process.exit(1);
 }
 
@@ -100,7 +119,9 @@ try {
   }
 } catch (error) {
   console.error('✗ CRITICAL: Error processing index.html:', error.message);
+  console.error('Error name:', error.name);
   console.error('Error stack:', error.stack);
+  console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
   process.exit(1);
 }
 
