@@ -1,16 +1,7 @@
 {
   "version": 2,
-  "outputDirectory": ".",
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/web/index.html"
-    },
-    {
-      "source": "/index.html",
-      "destination": "/web/index.html"
-    }
-  ]
+  "installCommand": "echo 'No dependencies to install'",
+  "buildCommand": "node build.js",
+  "outputDirectory": "public"
 }
 
