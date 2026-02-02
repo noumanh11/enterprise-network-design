@@ -208,19 +208,7 @@ mmdc -i VLSM-tree.mmd -o VLSM-tree.png -t dark -b transparent
 
 ### Diagram Customization
 
-The dark theme is configured using Mermaid's `init` directive at the beginning of each `.mmd` file:
-
-```mermaid
-%%{init: {'theme':'dark', 'themeVariables': {
-    'background':'#0a0e27',
-    'mainBkg':'#131829',
-    'textColor':'#f8fafc',
-    'primaryColor':'#00695c',
-    ...
-}}}%%
-```
-
-To modify colors, edit the `themeVariables` in the `%%{init:...}%%` block at the top of each diagram file.
+The diagram files use inline `style` directives for node colors (e.g. `style Start fill:#1a237e`). For GitHub compatibility, the `.mmd` files do not use Mermaid's `%%{init:...}%%` theme directive, as GitHub's Mermaid renderer does not support it. For dark theme rendering in Mermaid Live Editor or the web app, you can add an init block at the top of a copy of the file.
 
 ---
 
