@@ -38,8 +38,7 @@ body {
 body::before {
     content: '';
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     background:
@@ -58,7 +57,6 @@ body::before {
     padding: 40px 20px;
 }
 
-/* Header Styles */
 .header {
     text-align: center;
     margin-bottom: 60px;
@@ -542,6 +540,28 @@ body::before {
     font-size: 0.9rem;
 }
 
+.footer-contact {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.footer-contact h3 {
+    font-size: 1.1rem;
+    color: var(--accent-cyan);
+    margin-bottom: 10px;
+}
+
+.footer-contact a {
+    color: var(--accent-purple);
+    text-decoration: none;
+}
+
+.footer-contact a:hover {
+    color: var(--accent-cyan);
+    text-decoration: underline;
+}
+
 /* Animations */
 @keyframes fadeInDown {
     from {
@@ -811,6 +831,24 @@ body::before {
     border-color: var(--accent-purple);
     color: var(--accent-purple);
     box-shadow: 0 5px 20px var(--glow-purple);
+}
+
+.search-dim {
+    opacity: 0.28;
+    filter: saturate(0.55) blur(0.2px);
+    transform: scale(0.985);
+}
+
+.search-match {
+    opacity: 1;
+    filter: none;
+}
+
+.section-focused {
+    outline: 2px solid rgba(34, 211, 238, 0.35);
+    outline-offset: 10px;
+    border-radius: 20px;
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.12), 0 20px 50px rgba(34, 211, 238, 0.12);
 }
 
 /* Custom Tooltip */
@@ -1160,18 +1198,19 @@ body::before {
 .image-wrapper {
     position: relative;
     width: 100%;
-    padding-top: 75%;
+    aspect-ratio: 16 / 10;
+    padding: 12px;
     overflow: hidden;
     background: rgba(20, 25, 45, 0.5);
 }
 
 .image-wrapper img {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    display: block;
+    border-radius: 12px;
+    object-fit: cover;
+    object-position: center;
     transition: transform 0.4s ease;
 }
 
@@ -1193,6 +1232,147 @@ body::before {
 .image-card:hover .image-caption {
     color: var(--accent-purple);
     background: rgba(167, 139, 250, 0.1);
+}
+
+.document-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.document-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.document-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--accent-cyan);
+    box-shadow: 0 20px 60px rgba(34, 211, 238, 0.25);
+}
+
+.document-preview {
+    position: relative;
+    width: 100%;
+    min-height: 260px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 14px;
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 33, 0.95)),
+        radial-gradient(circle at top left, rgba(34, 211, 238, 0.22), transparent 42%),
+        radial-gradient(circle at bottom right, rgba(167, 139, 250, 0.22), transparent 40%);
+    overflow: hidden;
+}
+
+.document-preview::before {
+    content: '';
+    position: absolute;
+    inset: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.document-preview::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 65%);
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+    opacity: 0.7;
+}
+
+.document-badge {
+    position: relative;
+    z-index: 1;
+    align-self: flex-start;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(96, 165, 250, 0.18);
+    border: 1px solid rgba(96, 165, 250, 0.45);
+    color: var(--accent-cyan);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.document-file-name {
+    position: relative;
+    z-index: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.document-summary {
+    position: relative;
+    z-index: 1;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.document-preview-eigrp {
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 33, 0.95)),
+        radial-gradient(circle at top left, rgba(34, 211, 238, 0.22), transparent 42%),
+        radial-gradient(circle at bottom right, rgba(96, 165, 250, 0.18), transparent 40%);
+}
+
+.document-preview-ospf {
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 33, 0.95)),
+        radial-gradient(circle at top left, rgba(167, 139, 250, 0.24), transparent 42%),
+        radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.18), transparent 40%);
+}
+
+.document-preview-nat {
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 33, 0.95)),
+        radial-gradient(circle at top left, rgba(251, 146, 60, 0.22), transparent 42%),
+        radial-gradient(circle at bottom right, rgba(244, 114, 182, 0.18), transparent 40%);
+}
+
+.document-caption {
+    padding: 16px 20px 8px;
+    text-align: center;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.document-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(100% - 32px);
+    margin: 0 16px 18px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.16), rgba(167, 139, 250, 0.16));
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    transition: all 0.3s ease;
+}
+
+.document-link:hover {
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.28), rgba(167, 139, 250, 0.28));
+    border-color: var(--accent-cyan);
 }
 
 /* Staggered animation delays for image cards */
@@ -1349,7 +1529,12 @@ body::before {
     }
 
     .image-wrapper {
-        padding-top: 60%;
+        aspect-ratio: 16 / 11;
+    }
+
+    .document-gallery {
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
 }
 

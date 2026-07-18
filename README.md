@@ -618,6 +618,12 @@ All configuration results are documented with screenshots in the `results/` dire
 This project demonstrates proficiency in:
 
 1. **VLSM Subnetting:** Advanced IP address allocation techniques
+
+## 📫 Connect with Me
+
+- **Name:** Nouman Hafeez
+- **GitHub:** https://github.com/noumanh11
+- **Email:** noumanhafeez.nh11@gmail.com
 2. **Routing Protocols:** Configuration of RIP, EIGRP, and OSPF
 3. **Route Redistribution:** Integration of multiple routing protocols
 4. **Network Services:** DHCP, NAT, and server configuration
