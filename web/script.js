@@ -85,14 +85,19 @@ function addSearchFunctionality() {
 // Filter networks based on search
 function filterNetworks(searchTerm) {
     const allCards = document.querySelectorAll('.network-card, .link-card, .lan-card');
+    const normalizedTerm = searchTerm.trim().toLowerCase();
 
     allCards.forEach(card => {
         const text = card.textContent.toLowerCase();
-        if (text.includes(searchTerm)) {
-            card.style.display = '';
+        const isMatch = normalizedTerm === '' || text.includes(normalizedTerm);
+
+        card.classList.toggle('search-match', isMatch);
+        card.classList.toggle('search-dim', normalizedTerm !== '' && !isMatch);
+
+        if (isMatch) {
             card.style.animation = 'fadeIn 0.3s ease-out';
         } else {
-            card.style.display = 'none';
+            card.style.animation = '';
         }
     });
 }
@@ -130,14 +135,21 @@ function applyFilter(filter) {
         lans: document.querySelector('.lan-grid').parentElement
     };
 
+    Object.values(sections).forEach(section => {
+        section.classList.remove('section-focused');
+    });
+
     if (filter === 'all') {
         Object.values(sections).forEach(section => {
             section.style.display = '';
         });
     } else {
-        Object.keys(sections).forEach(key => {
-            sections[key].style.display = key === filter ? '' : 'none';
-        });
+        const targetSection = sections[filter];
+
+        if (targetSection) {
+            targetSection.classList.add('section-focused');
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 }
 
