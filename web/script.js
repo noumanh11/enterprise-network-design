@@ -16,7 +16,7 @@ function configureAssetFallbacks() {
         return;
     }
 
-    const remoteBaseUrl = 'https://raw.githubusercontent.com/noumanh11/enterprise-network-design/fix-author-identity/';
+    const remoteBaseUrl = 'https://raw.githubusercontent.com/noumanh11/enterprise-network-design/main/';
 
     const toRemoteAssetUrl = (assetPath) => {
         if (!assetPath || /^https?:\/\//i.test(assetPath) || assetPath.startsWith('data:')) {
