@@ -5,8 +5,46 @@ document.addEventListener('DOMContentLoaded', () => {
     addInteractiveFeatures();
     addSearchFunctionality();
     addFilterFunctionality();
+    configureAssetFallbacks();
     createNetworkConnections();
 });
+
+function configureAssetFallbacks() {
+    const isLocalEnvironment = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) || window.location.protocol === 'file:';
+
+    if (isLocalEnvironment) {
+        return;
+    }
+
+    const remoteBaseUrl = 'https://raw.githubusercontent.com/noumanh11/enterprise-network-design/main/';
+
+    const toRemoteAssetUrl = (assetPath) => {
+        if (!assetPath || /^https?:\/\//i.test(assetPath) || assetPath.startsWith('data:')) {
+            return assetPath;
+        }
+
+        const normalizedPath = decodeURI(assetPath).replace(/^\.\.\//g, '').replace(/^\.\//, '');
+        return remoteBaseUrl + encodeURI(normalizedPath);
+    };
+
+    document.querySelectorAll('.image-card img').forEach((img) => {
+        const localSrc = img.getAttribute('src');
+        const remoteSrc = toRemoteAssetUrl(localSrc);
+
+        if (remoteSrc && remoteSrc !== localSrc) {
+            img.src = remoteSrc;
+        }
+    });
+
+    document.querySelectorAll('.document-link').forEach((link) => {
+        const localHref = link.getAttribute('href');
+        const remoteHref = toRemoteAssetUrl(localHref);
+
+        if (remoteHref && remoteHref !== localHref) {
+            link.href = remoteHref;
+        }
+    });
+}
 
 // Initialize entrance animations
 function initializeAnimations() {
@@ -85,14 +123,19 @@ function addSearchFunctionality() {
 // Filter networks based on search
 function filterNetworks(searchTerm) {
     const allCards = document.querySelectorAll('.network-card, .link-card, .lan-card');
+    const normalizedTerm = searchTerm.trim().toLowerCase();
 
     allCards.forEach(card => {
         const text = card.textContent.toLowerCase();
-        if (text.includes(searchTerm)) {
-            card.style.display = '';
+        const isMatch = normalizedTerm === '' || text.includes(normalizedTerm);
+
+        card.classList.toggle('search-match', isMatch);
+        card.classList.toggle('search-dim', normalizedTerm !== '' && !isMatch);
+
+        if (isMatch) {
             card.style.animation = 'fadeIn 0.3s ease-out';
         } else {
-            card.style.display = 'none';
+            card.style.animation = '';
         }
     });
 }
@@ -130,14 +173,21 @@ function applyFilter(filter) {
         lans: document.querySelector('.lan-grid').parentElement
     };
 
+    Object.values(sections).forEach(section => {
+        section.classList.remove('section-focused');
+    });
+
     if (filter === 'all') {
         Object.values(sections).forEach(section => {
             section.style.display = '';
         });
     } else {
-        Object.keys(sections).forEach(key => {
-            sections[key].style.display = key === filter ? '' : 'none';
-        });
+        const targetSection = sections[filter];
+
+        if (targetSection) {
+            targetSection.classList.add('section-focused');
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 }
 
